@@ -168,6 +168,9 @@ a{color:var(--blue)}
 .bar-row .fill{height:100%;background:var(--blue)}
 .bar-row .fill.mid{background:#7B9BE8}
 .bar-row .fill.low{background:#C0342A}
+.bar-row .track.cut{position:relative}
+.bar-row .track.cut::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--red);opacity:.65}
+.bar-row span b{font-family:var(--mono);font-size:10px;letter-spacing:.08em}
 .bar-row .val{font-family:var(--mono);font-size:12px;text-align:right;color:var(--ink-2)}
 .review-item{border:1px solid var(--rule);border-radius:3px;margin-bottom:8px;overflow:hidden}
 .review-head{width:100%;display:flex;gap:10px;align-items:center;padding:12px 16px;flex-wrap:wrap}
@@ -1467,7 +1470,7 @@ const PRACTICE_B = [
 /* ===== 상태 ===== */
 const COMPS = ["문제정의","프롬프트 설계","보안 및 윤리","결과 검증","비즈니스 판단","업무 통합"];
 const DIFF_CLASS = {"하":"d1","중":"d2","상":"d3"};
-const S = {mode:40, list:[], idx:0, ans:{}, rb:{}, shown:{}, started:0, limit:140*60, tick:null, done:false, wrongOnly:false};
+const S = {mode:50, list:[], idx:0, ans:{}, rb:{}, shown:{}, started:0, limit:140*60, tick:null, done:false, wrongOnly:false};
 
 /* ===== 저장소 (localStorage · 없으면 메모리로 대체) =====
    claude.ai 미리보기에서는 브라우저 저장소가 막혀 있어 자동으로 메모리 모드가 됩니다.
@@ -1624,7 +1627,7 @@ function renderStart(){
       <p>객관식·실습형·시나리오 3개 파트를 실제 시험과 같은 문항 수와 배점으로 구성했습니다. 문항마다 난이도가 표시되고, 정답을 공개할 때 출제 주제와 보완점을 함께 보여줍니다.</p>
       <dl class="spec">
         <div><dt>TIME</dt><dd>140<small>분</small></dd></div>
-        <div><dt>ITEMS</dt><dd id="spec-n">40<small>문항 · 3개 파트</small></dd></div>
+        <div><dt>ITEMS</dt><dd id="spec-n">50<small>문항 · 3개 파트</small></dd></div>
         <div><dt>SCORE</dt><dd>1,000<small>300 / 300 / 400점</small></dd></div>
         <div><dt>PASS</dt><dd>600<small>점 이상</small></dd></div>
       </dl>
@@ -1634,13 +1637,13 @@ function renderStart(){
       <h2>문항 수 구성을 고르세요</h2>
       <div class="opts">
         <div class="opt-row">
-          <button class="chip" data-mode="40" aria-pressed="true">
+          <button class="chip" data-mode="50" aria-pressed="true">
             <span class="dot"></span>
-            <span><b>40문항 구성</b><small>객관식 20 · 실습형 15 · 시나리오 5<br>공식 대비 과정에 안내된 현행 기준</small></span>
+            <span><b>50문항 정식 구성</b><small>Part 1 객관식 30 · 25분<br>Part 2 실습형 15 · 15분<br>Part 3 시나리오 5 · 100분</small></span>
           </button>
-          <button class="chip" data-mode="50" aria-pressed="false">
+          <button class="chip" data-mode="40" aria-pressed="false">
             <span class="dot"></span>
-            <span><b>50문항 구성</b><small>객관식 30 · 실습형 15 · 시나리오 5<br>1~3회 시행 기사 기준 · 객관식 10문항 추가</small></span>
+            <span><b>40문항 축약 구성</b><small>객관식을 20문항으로 줄인 연습용<br>시간이 부족할 때 빠르게 한 바퀴</small></span>
           </button>
         </div>
       </div>
@@ -1657,6 +1660,8 @@ function renderStart(){
         <b>Part 1 · 객관식 4지선다 (300점)</b> — AI 기본 개념, 도구 선택, 윤리 판단. 자동 채점.<br><br>
         <b>Part 2 · 실습형 (300점)</b> — 프롬프트 작성, 프롬프트 순서 설계, 결과 분석. 순서·복수선택 문항은 부분 점수로 자동 채점되고, 프롬프트 작성 문항은 모범답안과 루브릭 체크리스트로 자가 채점합니다.<br><br>
         <b>Part 3 · 시나리오 서술형 (400점)</b> — 개발·IT 직군 맥락 과제를 서술합니다. 문항당 80점이며 루브릭 항목별 자가 채점입니다.<br><br>
+        <b>합격 기준</b> — 총점 600점 이상이면서 <b>6대 역량이 모두 50점(100점 환산) 이상</b>이어야 합니다. 한 역량이라도 50점 미만이면 총점과 무관하게 불합격입니다.<br><br>
+        <b>파트별 권장 시간</b> — Part 1은 문항당 약 50초, Part 2는 약 1분, Part 3은 약 20분입니다. Part 2는 생각할 시간이 거의 없으므로 판단 속도를 함께 훈련하세요.<br><br>
         <b>문항은 응시할 때마다 무작위로 추출됩니다.</b> Part 2는 30문항 은행에서 유형별로 5문항씩, Part 3는 20문항 은행에서 5문항을 뽑습니다. 덜 나온 문항을 먼저 뽑기 때문에, 은행을 한 바퀴 돌기 전에는 같은 문항이 다시 나오지 않습니다.<br><br>
         채점 후에는 총점, 파트별 점수, 6대 역량별 점수, 문항별 해설과 보완점을 확인할 수 있습니다.
       </div>
@@ -1774,6 +1779,7 @@ function renderExam(){
           <span class="tag part">${partName}</span>
           <span class="diff ${DIFF_CLASS[q.diff]}">난이도 ${q.diff}</span>
           <span class="tag pt">${Math.round(q.pts)}점</span>
+          <span class="tag">권장 ${{1:"50초",2:"1분",3:"20분"}[q.part]}</span>
         </div>
         <div class="q-body">
           <div class="q-text">${esc(q.q)}</div>
@@ -1951,7 +1957,10 @@ function finish(){
   });
   const total = Math.round(parts[1].g + parts[2].g + parts[3].g);
   const maxTotal = Math.round(parts[1].m + parts[2].m + parts[3].m);
-  const pass = total >= 600;
+  /* 합격 = 총점 600 이상 + 6대 역량 모두 50점 이상(100점 환산). 하나라도 미달이면 불합격 */
+  const compScore = {}; COMPS.forEach(c => compScore[c] = comps[c].m ? Math.round(comps[c].g/comps[c].m*100) : 0);
+  const failed = COMPS.filter(c => comps[c].m > 0 && compScore[c] < 50);
+  const pass = total >= 600 && failed.length === 0;
   const used = Math.min(S.limit, Math.floor((Date.now()-S.started)/1000));
 
   /* 기록 저장 · 오답 노트 갱신 */
@@ -1976,7 +1985,8 @@ function finish(){
       <span class="val">${Math.round(g)} / ${Math.round(m)}</span></div>`;
   };
 
-  const weak = COMPS.map(c => ({c, pct: comps[c].m ? comps[c].g/comps[c].m : 1}))
+  const weak = COMPS.filter(c => comps[c].m > 0)
+    .map(c => ({c, pct: comps[c].g/comps[c].m}))
     .sort((a,b)=>a.pct-b.pct).slice(0,2).filter(x=>x.pct<0.8);
 
   app.innerHTML = `<div class="wrap"><section class="result">
@@ -1988,7 +1998,8 @@ function finish(){
       </div>
       ${S.wrongOnly
         ? `<div class="pass ${remainWrong?"n":"y"}">오답 노트 ${remainWrong}문항 남음</div>`
-        : `<div class="pass ${pass?"y":"n"}">${pass?"합격 기준 충족":"기준 미달"}</div>`}
+        : `<div class="pass ${pass?"y":"n"}">${pass ? "합격 기준 충족"
+             : total < 600 ? "총점 미달" : `역량 과락 ${failed.length}개`}</div>`}
     </div>
 
     <div class="sec-h">파트별 점수</div>
@@ -1998,9 +2009,16 @@ function finish(){
       ${bar("Part 3 시나리오", parts[3].g, parts[3].m)}
     </div>
 
-    <div class="sec-h">6대 역량별 점수</div>
-    <div class="bars">${COMPS.map(c => bar(c, comps[c].g, comps[c].m)).join("")}</div>
+    <div class="sec-h">6대 역량별 점수 — 100점 환산 · 50점 미만은 과락</div>
+    <div class="bars">${COMPS.map(c => {
+      const pct = compScore[c], out = comps[c].m > 0 && pct < 50;
+      return `<div class="bar-row"><span>${c}${out?' <b style="color:var(--red)">과락</b>':''}</span>
+        <span class="track cut"><span class="fill ${pct>=50?"":"low"}" style="width:${pct}%"></span></span>
+        <span class="val">${pct}점</span></div>`;
+    }).join("")}</div>
 
+    ${failed.length ? `<div class="panel" style="margin-top:26px"><h2>과락 역량 ${failed.length}개</h2>
+      <div class="note" style="margin-top:12px">총점과 무관하게 <b>역량별 50점 미만이 하나라도 있으면 불합격</b>입니다. 현재 ${failed.map(c=>`<b>${c}</b>(${compScore[c]}점)`).join(", ")}이 기준에 미달합니다. 총점을 올리는 것보다 이 역량을 50점 위로 올리는 것이 우선입니다.</div></div>` : ""}
     ${weak.length ? `<div class="panel" style="margin-top:26px"><h2>먼저 보완할 영역</h2>
       <div class="note" style="margin-top:12px">${weak.map(w=>`<b>${w.c}</b> — 획득률 ${Math.round(w.pct*100)}%. 아래 문항별 검토에서 이 역량 태그가 붙은 문항의 보완점부터 다시 읽어보세요.`).join("<br><br>")}</div></div>` : ""}
 
